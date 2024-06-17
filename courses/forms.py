@@ -3,7 +3,7 @@ from .models import Course, NotasAlumnoPorCurso
 class CourseForm(forms.ModelForm):
   class Meta:
     model = Course
-    fields = ['name', 'code', 'description', 'image', 'syllabus', 'instructor', 'price', 'duration', 'category', 'level', 'status']
+    fields = ['name', 'code', 'description']
     form_fields = {
       'Codigo': forms.CharField(label='Código', max_length=100, required=False),
     }
@@ -18,7 +18,7 @@ class NotasAlumnoPorCursoForm(forms.ModelForm):
 
     class Meta:
         model = NotasAlumnoPorCurso
-        fields = ['student', 'course', 'grade']
+        fields = ['id_curso', 'id_alumno', 'nota']
         labels = {
           'student': 'Alumno',
           'course': 'Curso',
