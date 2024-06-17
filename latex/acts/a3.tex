@@ -1,0 +1,194 @@
+\section{Users app}
+
+Ahora nos centraremos en la aplicación \texttt{users}, abordando los modelos (\texttt{models.py}), vistas (\texttt{views.py}), formularios (\texttt{forms.py}), y plantillas (\texttt{templates}). A través de ejemplos de código, se explicarán las funcionalidades y la lógica detrás de cada componente.
+
+\section{Modelos de Datos (\texttt{models.py})}
+
+\subsection{Modelo de Usuario (\texttt{User})}
+
+El modelo \texttt{User} es una clase abstracta que define los campos comunes a todos los usuarios del sistema, como el ID, nombre y correo electrónico. Esta clase es la base para otros modelos específicos de usuario, como \texttt{Student}.
+
+\begin{lstlisting}[language=Python, caption=Modelo \texttt{User}]
+# users/models/User.py
+from django.db import models
+import uuid
+
+class User(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    name = models.CharField(max_length=255, null=False, blank=False)
+    email = models.EmailField(unique=True, null=False, blank=False)
+
+    class Meta:
+        abstract = True  # Esto hace que User sea una clase base abstracta
+
+    def __str__(self):
+        return self.name
+\end{lstlisting}
+
+\subsubsection{Explicacion del Codigo: }
+
+\begin{itemize}
+\item \texttt{id}: Campo de tipo \texttt{UUIDField} que actúa como clave primaria y se genera automáticamente.
+\item \texttt{name}: Campo de tipo \texttt{CharField} para el nombre del usuario.
+\item \texttt{email}: Campo de tipo \texttt{EmailField} que debe ser único.
+\item \texttt{abstract = True}: Indica que \texttt{User} es una clase abstracta y no se creará una tabla para esta clase en la base de datos.
+
+\end{itemize}
+
+\subsection{Modelo de Estudiante (\texttt{Student})}
+
+El modelo \texttt{Student} hereda de \texttt{User} y añade una relación con el modelo \texttt{Course}, permitiendo asignar cursos a los estudiantes.
+
+\begin{lstlisting}[language=Python, caption=Modelo \texttt{Student}]
+# users/models/student.py
+from django.db import models
+from .User import User
+from courses.models import Course
+
+class Student(User):
+    courses = models.ForeignKey(Course, related_name='students', on_delete=models.CASCADE, null=True, blank=True)
+\end{lstlisting}
+
+\subsubsection{Explicacion del Codigo: }
+
+- \texttt{courses}: Campo de tipo \texttt{ForeignKey} que relaciona al estudiante con un curso. Permite la relación de muchos a uno (muchos estudiantes pueden estar inscritos en un curso).
+
+\section{Vistas (\texttt{views.py})}
+
+Las vistas manejan la lógica de las solicitudes y respuestas del sistema. En esta sección, se describe la vista para la creación de estudiantes.
+
+\subsection{Vista para Agregar Estudiante (\texttt{addStudent})}
+
+\begin{lstlisting}[language=Python, caption=Vista para Agregar Estudiante]
+# users/views.py
+from django.shortcuts import render, redirect
+from .forms import StudentForm
+
+def addStudent(request):
+    if request.method == 'POST':
+        form = StudentForm(request.POST)
+        if form.is_valid():
+            form.submit()
+            return render(request, 'success.html', {})
+    else:
+        form = StudentForm()
+    return render(request, 'form.html', {'form': form})
+\end{lstlisting}
+
+\subsubsection{Explicacion del Codigo: }
+
+\begin{itemize}
+\item Si el método de la solicitud es \texttt{POST}, se procesa el formulario.
+\item Si el formulario es válido, se guarda el nuevo estudiante y se muestra una página de éxito.
+\item Si el método es \texttt{GET}, se muestra un formulario vacío.
+\end{itemize}
+
+\section{Formularios (\texttt{forms.py})}
+
+Los formularios son esenciales para la entrada y validación de datos en Django.
+
+\subsection{Formulario de Estudiante (\texttt{StudentForm})}
+
+\begin{lstlisting}[language=Python, caption=Formulario de Estudiante]
+# users/forms.py
+from django import forms
+from .models import Student
+
+class StudentForm(forms.ModelForm):
+    class Meta:
+        model = Student
+        fields = ['name', 'email']
+
+    def clean(self):
+        cleaned_data = super().clean()
+        student_id = cleaned_data.get('id')
+        if Student.objects.filter(id=student_id).exists():
+            raise forms.ValidationError('Ya existe un estudiante con ese id')
+        return cleaned_data
+
+    def submit(self, commit=True):
+        instance = super().save(commit=False)
+        if commit:
+            instance.save()
+        return instance
+\end{lstlisting}
+
+\subsubsection{Explicacion del Codigo: }
+
+\begin{itemize}
+\item Se especifica el modelo y los campos a incluir en el formulario.
+\item \texttt{clean}: Método de validación que verifica si ya existe un estudiante con el mismo ID.
+\item \texttt{submit}: Método para guardar la instancia del formulario.
+\end{itemize}
+
+\section{Plantillas (\texttt{templates})}
+
+Las plantillas definen cómo se presenta la información en la interfaz de usuario.
+
+\subsection{Plantilla para el Formulario (\texttt{form.html})}
+
+\begin{lstlisting}[language=HTML, caption=Plantilla para el Formulario]
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registrando Usuario</title>
+</head>
+<body>
+    <h1>{{ Label|upper }}</h1>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Registrar</button>
+    </form>
+</body>
+</html>
+\end{lstlisting}
+
+\subsection{Plantilla de Éxito (\texttt{success.html})}
+
+\begin{lstlisting}[language=HTML, caption=Plantilla de Éxito]
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Éxito</title>
+</head>
+<body>
+    <h1>REALIZADO CON ÉXITO</h1>
+</body>
+</html>
+\end{lstlisting}
+
+\section{Configuración de URLs (\texttt{urls.py})}
+
+La configuración de URLs es esencial para enrutar las solicitudes a las vistas correspondientes.
+
+\begin{lstlisting}[language=Python, caption=Configuración de URLs]
+# urls.py
+from django.contrib import admin
+from django.urls import path
+from users.views import addStudent
+from courses.views import create_curso, list_cursos, addGrade, index
+
+urlpatterns = [
+    path('admin/', admin.site.urls),
+    path('sistema/addStudent/', addStudent, name='addStudent'),
+    path('sistema/', index, name='index'),
+    path('/', index, name='index'),
+    path('sistema/create_curso/', create_curso, name='create_curso'),
+    path('sistema/list_cursos/', list_cursos, name='list_cursos'),
+]
+\end{lstlisting}
+
+\subsubsection*{Explicacion del Codigo:}
+
+\begin{itemize}
+\item \texttt{path('admin/', admin.site.urls)}: URL para la administración de Django.
+\item \texttt{path('sistema/addStudent/', addStudent, name='addStudent')}: URL para agregar un nuevo estudiante.
+\item \texttt{path('sistema/', index, name='index')}: URL para la página de inicio.
+\item \texttt{path('sistema/create\_curso/', create\_curso, name='create\_curso')}: URL para crear un curso.
+\item \texttt{path('sistema/list\_cursos/', list\_cursos, name='list\_cursos')}: URL para listar los cursos.
+\end{itemize}

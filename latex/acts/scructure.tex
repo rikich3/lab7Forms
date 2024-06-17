@@ -1,9 +1,9 @@
-\section{Estructura de laboratorio 06}
+\section{Estructura de laboratorio 07}
 \begin{itemize}
 	\item El contenido que se entrega en este laboratorio es el siguiente:
 \end{itemize}
 \begin{lstlisting}[language=bash]
-  CoderDojo/
+  lab07Forms/
     |---/CoderDojoUNSA
         |---__init.py
         |---asgi.py
@@ -13,30 +13,38 @@
     |---/courses
         |---/migrations
         |---/models
-            |---__init.py
-            |---admin.py
-            |---apps-py
-            |---models.py.deprecated
-            |---tests.py
-            |---views.py
-    |---/groups
-        |---/migrations
-        |---/models
-            |---__init.py
-            |---admin.py
-            |---apps-py
-            |---models.py.deprecated
-            |---tests.py
-            |---views.py
+            |---__init__.py
+            |---assigment.py
+            |---Course.py
+            |---NotasAlumnoPorCurso.py
+        |---templates/
+            |---sistema/
+                |---create_curso.html
+                |---index.html
+                |---list_cursos.html
+        |---__init_.py
+        |---admin.py
+        |---apps.py
+        |---forms.py
+        |---models.py.deprecated
+        |---tests.py
+        |---views.py
     |---/users
         |---/migrations
         |---/models
             |---__init.py
-            |---admin.py
-            |---apps-py
-            |---models.py.deprecated
-            |---tests.py
-            |---views.py   
+            |---Student.py
+            |---User.py
+        |---templates/
+            |---form.html
+            |---success.html
+        |---__init_.py
+        |---admin.py
+        |---apps.py
+        |---forms.py
+        |---models.py.deprecated
+        |---tests.py
+        |---views.py
     |---/latex
         |---/acts
         |---/foot
@@ -49,6 +57,4 @@
     |--- README.md
     |---.gitignore
     |---requirements.txt
-    |---diagram.png
-    |---diagram.dot
   \end{lstlisting}

@@ -1,32 +1,292 @@
-\section{Admin CRUD}
-Para poder realizar el CRUD de los modelos en Django, se debe registrar los modelos en el archivo admin.py de cada aplicación. A continuación se muestra un ejemplo de cómo se registra el modelo Course en el archivo admin.py de la aplicación courses:
+\section{Laboratorio 07}
 
-\begin{lstlisting}[language=Python]
-from django.contrib import admin
-from courses.models import Course
-from courses.models import Content
-from courses.models import Assignment
-from users.models import Student
-from users.models import Teacher
-from groups.models import Group
+Este informe detalla el desarrollo y la implementación de un sistema académico utilizando Django, que permite la gestión de cursos, estudiantes y sus notas. El sistema se divide en dos aplicaciones principales: \texttt{courses} y \texttt{users}. En esta seccion, nos centraremos en la aplicación \texttt{courses}, abordando los modelos (\texttt{Course.py, NotasAlumnoPorCurso.py}), vistas (\texttt{views.py}), formularios (\texttt{forms.py}), y plantillas del directorio (\texttt{templates}). A través de ejemplos de código, se explicarán las funcionalidades y la lógica detrás de cada componente.
 
+\section{Modelos de Datos (\texttt{models.py})}
 
-# Register your models here.
-admin.site.register(Course)
-admin.site.register(Content)
-admin.site.register(Assignment)
-admin.site.register(Student)
-admin.site.register(Teacher)
-admin.site.register(Group)
+\subsection{Modelo de Curso (\texttt{Course})}
+
+El modelo \texttt{Course} define la estructura de los cursos que se ofrecen en el sistema. Cada curso tiene un código único, un nombre y una descripción.
+
+\begin{lstlisting}[language=Python, caption=Modelo de Curso]
+from django.db import models
+
+class Course(models.Model):
+    code = models.CharField(max_length=10, unique=True, primary_key=True, default='')
+    name = models.CharField(max_length=255, blank=False, null=False)
+    description = models.TextField(blank=True, null=False)
+
+    def __str__(self):
+        return f"({self.code}) {self.name}"
 \end{lstlisting}
 
-Esta es una forma de registrar los modelos en el panel de administración de Django, para poder realizar el CRUD de los modelos.
+\subsubsection{Explicación del Código}
 
-Aqui se muestra el acceso por medio de la URL /admin, donde se puede ver los modelos registrados en el panel de administración de Django.
+\begin{itemize}
+    \item \texttt{code}: Campo de tipo \texttt{CharField} que actúa como clave primaria y debe ser único.
+    \item \texttt{name}: Campo de tipo \texttt{CharField} para el nombre del curso.
+    \item \texttt{description}: Campo de tipo \texttt{TextField} para la descripción del curso.
+    \item \texttt{\_\_str\_\_}: Método que define la representación en cadena del objeto \texttt{Course}.
+\end{itemize}
 
-\begin{figure}[H]
-  \centering
-  \includegraphics[width=0.8\textwidth]{img/admin.png}
-  \caption{Panel de administración de Django}
-\end{figure}
+\subsection{Modelo de Notas por Curso (\texttt{NotasAlumnoPorCurso})}
 
+El modelo \texttt{NotasAlumnoPorCurso} registra las notas de los estudiantes en los cursos. Este modelo incluye relaciones con los modelos \texttt{Course} y \texttt{Student}.
+
+\begin{lstlisting}[language=Python, caption=Modelo de Notas por Curso]
+from django.db import models
+from django.core.validators import MinValueValidator, MaxValueValidator
+from courses.models import Course
+
+class NotasAlumnoPorCurso(models.Model):
+    id_nota = models.CharField(max_length=100, unique=True, primary_key=True)
+    id_curso = models.ForeignKey(Course, related_name='curso', on_delete=models.CASCADE)
+    id_alumno = models.ForeignKey('users.Student', related_name='student', on_delete=models.CASCADE)
+    nota = models.IntegerField(validators=[MinValueValidator(0), MaxValueValidator(100)])
+
+    def __str__(self):
+        return f"({self.id_alumno}) {self.nota}"
+\end{lstlisting}
+
+\subsubsection{Explicación del Código}
+
+\begin{itemize}
+    \item \texttt{id_nota}: Campo de tipo \texttt{CharField} que actúa como clave primaria y debe ser único.
+    \item \texttt{id_curso}: Campo de tipo \texttt{ForeignKey} que relaciona una nota con un curso.
+    \item \texttt{id_alumno}: Campo de tipo \texttt{ForeignKey} que relaciona una nota con un estudiante.
+    \item \texttt{nota}: Campo de tipo \texttt{IntegerField} que almacena la nota del estudiante, validada entre 0 y 100.
+\end{itemize}
+
+\section{Vistas (\texttt{views.py})}
+
+Las vistas manejan la lógica de las solicitudes y respuestas del sistema. En esta sección, se describen las vistas para la creación y listado de cursos, así como la adición de notas.
+
+\subsection{Vista de Inicio (\texttt{index})}
+
+\begin{lstlisting}[language=Python, caption=Vista de Inicio]
+from django.shortcuts import render
+
+def index(request):
+    return render(request, 'sistema/index.html')
+\end{lstlisting}
+
+\subsection{Vista para Crear Curso (\texttt{create\_curso})}
+
+\begin{lstlisting}[language=Python, caption=Vista para Crear Curso]
+from django.shortcuts import render, redirect
+from .forms import CourseForm
+
+def create_curso(request):
+    if request.method == 'POST':
+        form = CourseForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('list_cursos')
+    else:
+        form = CourseForm()
+    return render(request, 'sistema/create_curso.html', {'form': form})
+\end{lstlisting}
+
+\subsubsection{Explicación del Código}
+
+\begin{itemize}
+    \item Si el método de la solicitud es \texttt{POST}, se procesa el formulario.
+    \item Si el formulario es válido, se guarda el nuevo curso y se redirige a la lista de cursos.
+    \item Si el método es \texttt{GET}, se muestra un formulario vacío.
+\end{itemize}
+
+\subsection{Vista para Listar Cursos (\texttt{list\_cursos})}
+
+\begin{lstlisting}[language=Python, caption=Vista para Listar Cursos]
+from django.shortcuts import render
+from .models import Course
+
+def list_cursos(request):
+    cursos = Course.objects.all()
+    return render(request, 'sistema/list_cursos.html', {'cursos': cursos})
+\end{lstlisting}
+
+\subsubsection{Explicación del Código}
+
+\begin{itemize}
+    \item Recupera todos los cursos de la base de datos y los pasa al template para ser mostrados.
+\end{itemize}
+
+\subsection{Vista para Agregar Nota (\texttt{addGrade})}
+
+\begin{lstlisting}[language=Python, caption=Vista para Agregar Nota]
+from django.shortcuts import render, redirect
+from .forms import NotasAlumnoPorCursoForm
+
+def addGrade(request):
+    if request.method == 'POST':
+        form = NotasAlumnoPorCursoForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('success')
+    else:
+        form = NotasAlumnoPorCursoForm()
+    return render(request, 'sistema/add_grade.html', {'form': form})
+\end{lstlisting}
+
+\subsubsection{Explicación del Código}
+
+\begin{itemize}
+    \item Similar a \texttt{create\_curso}, pero para la adición de notas.
+\end{itemize}
+
+\section{Formularios (\texttt{forms.py})}
+
+Los formularios son esenciales para la entrada y validación de datos en Django.
+
+\subsection{Formulario de Curso (\texttt{CourseForm})}
+
+\begin{lstlisting}[language=Python, caption=Formulario de Curso]
+from django import forms
+from .models import Course
+
+class CourseForm(forms.ModelForm):
+    class Meta:
+        model = Course
+        fields = ['name', 'code', 'description']
+\end{lstlisting}
+
+\subsubsection{Explicación del Código}
+
+\begin{itemize}
+    \item Se especifica el modelo y los campos a incluir en el formulario.
+\end{itemize}
+
+\subsection{Formulario de Notas por Curso (\texttt{NotasAlumnoPorCursoForm})}
+
+\begin{lstlisting}[language=Python, caption=Formulario de Notas por Curso]
+from django import forms
+from .models import NotasAlumnoPorCurso
+
+class NotasAlumnoPorCursoForm(forms.ModelForm):
+    class Meta:
+        model = NotasAlumnoPorCurso
+        fields = ['id_curso', 'id_alumno', 'nota']
+        labels = {
+            'id_alumno': 'Alumno',
+            'id_curso': 'Curso',
+            'nota': 'Nota'
+        }
+
+    def clean_grade(self):
+        grade = self.cleaned_data.get('grade')
+        if grade < 0 or grade > 100:
+            raise forms.ValidationError('La nota debe estar entre 0 y 100')
+        return grade
+\end{lstlisting}
+
+\subsubsection{Explicación del Código}
+
+\begin{itemize}
+    \item Se especifican el modelo y los campos a incluir.
+    \item Se incluye un método de validación para asegurarse de que la nota esté dentro del rango permitido.
+\end{itemize}
+
+\section{Plantillas (\texttt{templates})}
+
+Las plantillas definen cómo se presenta la información en la interfaz de usuario.
+
+\subsection{Plantilla para Crear Curso (\texttt{create\_curso.html})}
+
+\begin{lstlisting}[language=HTML, caption=Plantilla para Crear Curso]
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Crear Curso</title>
+</head>
+<body>
+    <header>Sistema Académico</header>
+    <main>
+        <a href="{% url 'index' %}">Regresar al menú</a>
+        <h2>Crear Curso</h2>
+        <form method="post">
+            {% csrf_token %}
+            <table>
+                {{ form.as_table }}
+            </table>
+            <button type="submit">Crear</button>
+        </form>
+        <a href="{% url 'list_cursos' %}">Lista de cursos</a>
+    </main>
+</body>
+</html>
+\end{lstlisting}
+
+\subsection{Plantilla para Listar Cursos (\texttt{list\_cursos.html})}
+
+\begin{lstlisting}[language=HTML, caption=Plantilla para Listar Cursos]
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Lista de Cursos</title>
+</head>
+<body>
+    <header>Sistema Académico</header>
+    <main>
+        <a href="{% url 'index' %}">Regresar al menú</a>
+        <h2>Lista de cursos</h2>
+        <table>
+            <tr>
+                <th>Código</th>
+                <th>Nombre</th>
+                <th>Descripción</th>
+            </tr>
+            {% for curso in cursos %}
+            <tr>
+                <td>{{ curso.code }}</td>
+                <td>{{ curso.name }}</td>
+                <td>{{ curso.description }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+        <a href="{% url 'create_curso' %}">Crear un curso</a>
+    </main>
+</body>
+</html>
+\end{lstlisting}
+
+\subsection{Plantilla de Índice (\texttt{index.html})}
+
+\begin{lstlisting}[language=HTML, caption=Plantilla de Índice]
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'sistema/style.css' %}" />
+    <title>Índice</title>
+</head>
+<body>
+    <header>
+        <h1>Sistema Académico</h1>
+    </header>
+    <main>
+        <section class="opciones">
+            <h2>Opciones Disponibles</h2>
+            <div class="opcion">
+                <a href="{% url 'list_alumnos' %}">Lista de Alumnos</a>
+            </div>
+            <div class="opcion">
+                <a href="{% url 'create_alumno' %}">Crear Alumno</a>
+            </div>
+            <div class="opcion">
+                <a href="{% url 'list_cursos' %}">Lista de Cursos</a>
+            </div>
+            <div class="opcion">
+                <a href="{% url 'create_curso' %}">Crear Curso</a>
+            </div>
+        </section>
+    </main>
+</body>
+</html>
+\end{lstlisting}
