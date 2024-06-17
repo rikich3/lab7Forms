@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Crear Curso</title>
+</head>
+<body>
+  <header>Sistema Académico</header>
+
+  <main>
+    <a href="{% url 'index'}">Regresar al menú</a>
+  <main>
+    <h2>Lista de cursos</h2>
+        <table>
+          <tr>
+          <th>Código</th>
+          <th>Nombre</th>
+          <th>Créditos</th>
+          </tr>
+          {% for curso in cursos %}
+                <tr>
+                    <td>{{ curso.codigo }}</td>
+                    <td>{{ curso.nombre }}</td>
+                    <td>{{ curso.creditos }}</td>
+                </tr>
+                {% endfor %}
+        </table>
+    <a href="{% url 'create_curso'}">Crear un curso</a>
+  </main>
+</body>
+</html>

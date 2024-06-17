@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        {% load static %}
+        <link rel="stylesheet" href="{% static 'sistema/style.css' %}" />
+        <title>Indice</title>
+    </head>
+    <body>
+        <header>
+            <h1>Sistema Académico</h1>
+        </header>
+        <main>
+            <section class="opciones">
+                <h2>Opciones Disponibles</h2>
+                <div class="opcion">
+                    <a href="{% url 'list_alumnos' %}">Lista de Alumnos</a>
+                </div>
+                <div class="opcion">
+                    <a href="{% url 'create_alumno' %}">Crear Alumno</a>
+                </div>
+                <div class="opcion">
+                    <a href="{% url 'list_cursos' %}">Lista de Cursos</a>
+                </div>
+                <div class="opcion">
+                    <a href="{% url 'create_curso' %}">Crear Curso</a>
+                </div>
+                <div class="opcion">
+                    <a href="{% url 'list_notas' %}">Lista de Notas Curso</a>
+                </div>
+            </section>
+        </main>
+    </body>
+</html>
