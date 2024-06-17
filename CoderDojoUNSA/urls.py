@@ -17,9 +17,13 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 from users.views import addStudent
-
+from courses.views import create_curso, list_cursos, addGrade, index
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('addStudent/', addStudent, name= 'addStudent'),
+    path('sistema/addStudent/', addStudent, name= 'addStudent'),
+    path('sistema/', index, name='index'),
+    path('/', index, name='index'),
+    path('sistema/create_curso/', create_curso, name='create_curso'),
+    path('sistema/list_cursos/', list_cursos, name='list_cursos'),
 ]

@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect
 from .forms import CourseForm, NotasAlumnoPorCursoForm
 from .models import Course, NotasAlumnoPorCurso
+from users.models import Student
 
 def index(request):
   return render(request, 'sistema/index.html')
@@ -21,7 +22,12 @@ def list_cursos(request):
     'cursos':cursos
   })
 
-
-
-
-  
+def addGrade(request):
+  if request.method == 'POST':
+    form = NotasAlumnoPorCursoForm(request.POST)
+    if form.is_valid():
+      form.submit()
+      return redirect('success')
+  else:
+    form = NotasAlumnoPorCursoForm()
+  return render(request, 'sistema/add_grade.html', {'form': form})
