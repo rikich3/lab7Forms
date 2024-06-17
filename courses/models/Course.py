@@ -1,9 +1,8 @@
 from django.db import models
-from users.models import Teacher
 
 
 class Course(models.Model):
-  code = models.CharField(max_length=10, unique=True, primary_key=True, defaul='')
+  code = models.CharField(max_length=10, unique=True, primary_key=True, default='')
   name = models.CharField(max_length=255, blank=False, null=False)
   description = models.TextField(blank=True, null=False)
 

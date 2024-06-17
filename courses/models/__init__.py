@@ -1,4 +1,4 @@
 
 from .Course import Course
-from .Content import Content
-from .assigment import Assignment
+# from .assigment import Assignment
+from .NotasAlumnoPorCurso import NotasAlumnoPorCurso

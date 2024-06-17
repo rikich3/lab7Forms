@@ -13,8 +13,8 @@ from courses.models import Course
 
 class NotasAlumnoPorCurso(models.Model):
   id_nota = models.CharField(max_length=100, unique=True, primary_key=True)
-  id_alumno = models.ForeignKey(Student, on_delete=models.CASCADE) 
-  id_curso = models.ForeignKey(Course, on_delete=models.CASCADE)
+  id_curso = models.ForeignKey(Course,related_name='curso',  on_delete=models.CASCADE)
+  id_alumno = models.ForeignKey(Student, related_name='student', on_delete=models.CASCADE) 
   nota = models.IntegerField(
       validators=[MinValueValidator(0), MaxValueValidator(100)]
   )
